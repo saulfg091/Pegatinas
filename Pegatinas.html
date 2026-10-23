@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Etiquetas 56x21mm</title>
+  <!-- jsPDF para exportación vectorial exacta -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: #1e293b;
+      border-bottom: 1px solid #334155;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+    }
+
+    .badge-dims {
+      background: #38bdf8;
+      color: #042f2e;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-weight: 600;
+      font-size: 0.85rem;
+      padding: 8px 14px;
+      border-radius: 8px;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-success { background: #059669; color: white; }
+    .btn-success:hover { background: #047857; }
+    .btn-secondary { background: #334155; color: #f1f5f9; }
+    .btn-secondary:hover { background: #475569; }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 370px 1fr;
+      flex: 1;
+      min-height: calc(100vh - 70px);
+    }
+
+    @media (max-width: 900px) {
+      .app-container { grid-template-columns: 1fr; }
+    }
+
+    aside {
+      background: #1e293b;
+      border-right: 1px solid #334155;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    input, select {
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.88rem;
+      outline: none;
+      text-transform: uppercase;
+    }
+    input:focus, select:focus { border-color: #38bdf8; }
+
+    .label-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 480px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .label-item-card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748b;
+    }
+
+    .btn-delete {
+      background: transparent;
+      color: #ef4444;
+      padding: 2px 6px;
+      font-size: 0.75rem;
+    }
+    .btn-delete:hover { background: rgba(239, 68, 68, 0.15); }
+
+    .row-input-wrapper {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .row-input-wrapper input {
+      flex: 1;
+    }
+
+    .btn-invert {
+      background: #334155;
+      color: #f8fafc;
+      padding: 7px 10px;
+      font-size: 0.75rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-invert:hover {
+      background: #475569;
+    }
+    .btn-invert.is-black {
+      background: #000000;
+      color: #ffffff;
+      border: 1px solid #475569;
+    }
+    .btn-invert.is-white {
+      background: #ffffff;
+      color: #000000;
+      border: 1px solid #cbd5e1;
+    }
+
+    main {
+      padding: 30px;
+      background: #090d16;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .preview-board {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+      align-items: flex-start;
+      max-width: 1000px;
+    }
+
+    /* MEDIDA EXACTA 56x21 mm */
+    .label-outer {
+      width: 56mm;
+      height: 21mm;
+      background: #ffffff;
+      padding: 1.0mm 1.5mm;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      flex-shrink: 0;
+    }
+
+    .badge-capsule {
+      width: 53mm;
+      height: 19mm;
+      border: 1.3mm solid #000000;
+      border-radius: 3.2mm;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      background: #ffffff;
+    }
+
+    /* FILAS DINÁMICAS (1, 2 o 3 FILAS) */
+    .capsule-row {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 0 1.5mm;
+      text-transform: uppercase;
+      line-height: 1;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      border-bottom: 1.1mm solid #000000;
+    }
+
+    .capsule-row:last-child {
+      border-bottom: none;
+    }
+
+    /* Fondo negro / Texto blanco */
+    .capsule-row.row-black {
+      background: #000000 !important;
+      color: #ffffff !important;
+      font-family: 'Courier New', Courier, monospace;
+      font-weight: 800;
+    }
+
+    /* Fondo blanco / Texto negro */
+    .capsule-row.row-white {
+      background: #ffffff !important;
+      color: #000000 !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      font-weight: 800;
+    }
+
+    .label-text {
+      display: inline-block;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    @media screen {
+      #print-frame-hidden {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <span class="badge-dims">56 × 21 mm</span>
+      <h1>Generador de Etiquetas Térmicas</h1>
+    </div>
+    <div class="btn-group no-print">
+      <button class="btn-secondary" onclick="addLabel()">+ Añadir Pegatina</button>
+      <button class="btn-success" onclick="downloadVectorPDF()">📥 Descargar PDF (0 Hojas Blancas)</button>
+      <button class="btn-primary" onclick="directPrint()">🖨️ Imprimir Directo (Iframe)</button>
+    </div>
+  </header>
+
+  <div class="app-container">
+    <aside class="no-print">
+      <div class="form-group">
+        <label>Número de Filas por Etiqueta</label>
+        <select id="rowCountSelect" onchange="changeRowCount(parseInt(this.value, 10))">
+          <option value="1">1 Fila (Solo Título/Host)</option>
+          <option value="2" selected>2 Filas (Título + IP)</option>
+          <option value="3">3 Filas (Título + IP + Extra/MAC)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Orientación al Imprimir</label>
+        <select id="printOrientation">
+          <option value="horizontal">Horizontal (Normal)</option>
+          <option value="rotado">Rotado 90° (Alimentación transversal)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Generar Serie Automática</label>
+        <div style="display:flex; gap:6px;">
+          <input type="number" id="seriesCount" value="1" min="1" max="50" style="width: 70px;">
+          <button class="btn-secondary" onclick="generateBatch()" style="flex:1;">Generar Lote</button>
+        </div>
+      </div>
+
+      <hr style="border:0; border-top:1px solid #334155;">
+
+      <label>Lista de Etiquetas y Fondos</label>
+      <div class="label-list" id="labelInputs"></div>
+    </aside>
+
+    <main>
+      <div class="preview-board" id="previewBoard"></div>
+    </main>
+  </div>
+
+  <!-- Iframe aislado para que window.print() jamás contamine ni expulse página en blanco -->
+  <iframe id="print-frame-hidden" style="position:fixed; right:0; bottom:0; width:0; height:0; border:0;"></iframe>
+
+  <script>
+    let currentRowsCount = 2;
+
+    // Cada fila guarda su texto y su fondo ('black' o 'white')
+    let labelsData = [
+      {
+        rows: [
+          { text: "FILA 1", bg: "black" },
+          { text: "FILA 2", bg: "white" }
+        ]
+      }
+    ];
+
+    function changeRowCount(newCount) {
+      currentRowsCount = newCount;
+      labelsData.forEach(item => {
+        while (item.rows.length < currentRowsCount) {
+          const idx = item.rows.length;
+          item.rows.push({
+            text: idx === 2 ? "SALA-01" : "EXTRA",
+            bg: "white"
+          });
+        }
+        if (item.rows.length > currentRowsCount) {
+          item.rows = item.rows.slice(0, currentRowsCount);
+        }
+      });
+      renderInputs();
+      renderPreview();
+    }
+
+    function toggleRowBg(labelIdx, rowIdx) {
+      const currentBg = labelsData[labelIdx].rows[rowIdx].bg;
+      labelsData[labelIdx].rows[rowIdx].bg = (currentBg === 'black') ? 'white' : 'black';
+      renderInputs();
+      renderPreview();
+    }
+
+    function renderInputs() {
+      const container = document.getElementById('labelInputs');
+      container.innerHTML = '';
+      labelsData.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.className = 'label-item-card';
+
+        let rowInputsHtml = '';
+        for (let r = 0; r < currentRowsCount; r++) {
+          const rowObj = item.rows[r] || { text: '', bg: r === 0 ? 'black' : 'white' };
+          const isBlack = rowObj.bg === 'black';
+          const placeholder = `Fila ${r + 1}`;
+          
+          rowInputsHtml += `
+            <div class="form-group">
+              <div class="row-input-wrapper">
+                <input type="text" value="${escapeHtml(rowObj.text)}" placeholder="${placeholder}" 
+                       oninput="updateData(${index}, ${r}, this.value)">
+                <button type="button" class="btn-invert ${isBlack ? 'is-black' : 'is-white'}" 
+                        onclick="toggleRowBg(${index}, ${r})" title="Cambiar color de fondo">
+                  ${isBlack ? '⬛ Negro' : '⬜ Blanco'}
+                </button>
+              </div>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="card-header">
+            <span>ETIQUETA #${index + 1}</span>
+            ${labelsData.length > 1 ? `<button class="btn-delete" onclick="removeLabel(${index})">✕ Eliminar</button>` : ''}
+          </div>
+          <div class="row-inputs">
+            ${rowInputsHtml}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderPreview() {
+      const board = document.getElementById('previewBoard');
+      board.innerHTML = '';
+
+      labelsData.forEach((item, index) => {
+        const labelEl = document.createElement('div');
+        labelEl.className = 'label-outer';
+        labelEl.id = `label-preview-${index}`;
+
+        let rowsHtml = '';
+        for (let r = 0; r < currentRowsCount; r++) {
+          const rowObj = item.rows[r] || { text: '', bg: r === 0 ? 'black' : 'white' };
+          const textVal = (rowObj.text || '').toUpperCase();
+          const rowClass = rowObj.bg === 'black' ? 'capsule-row row-black' : 'capsule-row row-white';
+          rowsHtml += `
+            <div class="${rowClass}">
+              <span class="label-text" id="text-${index}-${r}">${escapeHtml(textVal)}</span>
+            </div>
+          `;
+        }
+
+        labelEl.innerHTML = `<div class="badge-capsule">${rowsHtml}</div>`;
+        board.appendChild(labelEl);
+      });
+
+      setTimeout(fitAllFonts, 10);
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function updateData(labelIndex, rowIndex, val) {
+      const upper = val.toUpperCase();
+      labelsData[labelIndex].rows[rowIndex].text = upper;
+      const textSpan = document.getElementById(`text-${labelIndex}-${rowIndex}`);
+      if (textSpan) {
+        textSpan.textContent = upper;
+        fitSingleText(textSpan);
+      }
+    }
+
+    function addLabel() {
+      let newRows = [];
+      if (labelsData.length > 0) {
+        const prev = labelsData[labelsData.length - 1];
+        newRows = prev.rows.map((rowObj, idx) => {
+          let newText = rowObj.text;
+          if (idx === 0) newText = incrementName(rowObj.text);
+          else if (rowObj.text.includes('.')) newText = incrementIP(rowObj.text);
+          return { text: newText, bg: rowObj.bg };
+        });
+      } else {
+        newRows = [
+          { text: "FILA 1", bg: "black" },
+          { text: "FILA 2", bg: "white" }
+        ].slice(0, currentRowsCount);
+      }
+
+      labelsData.push({ rows: newRows });
+      renderInputs();
+      renderPreview();
+    }
+
+    function removeLabel(index) {
+      if (labelsData.length <= 1) return;
+      labelsData.splice(index, 1);
+      renderInputs();
+      renderPreview();
+    }
+
+    function incrementIP(ip) {
+      const parts = ip.split('.');
+      if (parts.length === 4 && !isNaN(parts[3])) {
+        parts[3] = (parseInt(parts[3], 10) + 1).toString();
+        return parts.join('.');
+      }
+      return ip;
+    }
+
+    function incrementName(name) {
+      const match = name.match(/^(.*?)(\d+)$/);
+      if (match) {
+        const prefix = match[1];
+        const num = (parseInt(match[2], 10) + 1).toString().padStart(match[2].length, '0');
+        return prefix + num;
+      }
+      return name;
+    }
+
+    function generateBatch() {
+      const count = parseInt(document.getElementById('seriesCount').value, 10) || 1;
+      const base = labelsData[0] || {
+        rows: [
+          { text: "FILA 1", bg: "black" },
+          { text: "FILA 2", bg: "white" }
+        ]
+      };
+      labelsData = [{ rows: base.rows.map(r => ({ ...r })) }];
+
+      for (let i = 1; i < count; i++) {
+        const prevRows = labelsData[i - 1].rows;
+        const nextRows = prevRows.map((rowObj, idx) => {
+          let newText = rowObj.text;
+          if (idx === 0) newText = incrementName(rowObj.text);
+          else if (rowObj.text.includes('.')) newText = incrementIP(rowObj.text);
+          return { text: newText, bg: rowObj.bg };
+        });
+        labelsData.push({ rows: nextRows });
+      }
+
+      renderInputs();
+      renderPreview();
+    }
+
+    function fitText(element, maxW, maxH, minPt = 6, maxPt = 24) {
+      let low = minPt;
+      let high = maxPt;
+      let optimal = minPt;
+
+      while (low <= high) {
+        const mid = (low + high) / 2;
+        element.style.fontSize = mid.toFixed(1) + 'pt';
+        if (element.scrollWidth <= maxW && element.scrollHeight <= maxH) {
+          optimal = mid;
+          low = mid + 0.4;
+        } else {
+          high = mid - 0.4;
+        }
+      }
+      element.style.fontSize = optimal.toFixed(1) + 'pt';
+    }
+
+    function fitSingleText(textSpan) {
+      if (!textSpan || !textSpan.parentElement) return;
+      const maxW = textSpan.parentElement.clientWidth - 6;
+      const maxH = textSpan.parentElement.clientHeight - 2;
+      const maxAllowedPt = currentRowsCount === 1 ? 24 : (currentRowsCount === 2 ? 18 : 12.5);
+      fitText(textSpan, maxW, maxH, 6, maxAllowedPt);
+    }
+
+    function fitAllFonts() {
+      labelsData.forEach((item, lIdx) => {
+        for (let r = 0; r < currentRowsCount; r++) {
+          const textSpan = document.getElementById(`text-${lIdx}-${r}`);
+          fitSingleText(textSpan);
+        }
+      });
+    }
+
+    window.addEventListener('resize', fitAllFonts);
+
+    function downloadVectorPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [56, 20.2]
+      });
+
+      const badgeX = 1.5;
+      const badgeY = 0.8;
+      const badgeW = 53.0;
+      const badgeH = 18.6;
+      const radius = 3.0;
+      const rowHeight = badgeH / currentRowsCount;
+
+      labelsData.forEach((item, index) => {
+        if (index > 0) doc.addPage([56, 20.2], 'landscape');
+
+        doc.setFillColor(255, 255, 255);
+        doc.rect(0, 0, 56, 20.2, 'F');
+
+        doc.setFillColor(255, 255, 255);
+        doc.roundedRect(badgeX, badgeY, badgeW, badgeH, radius, radius, 'F');
+
+        for (let r = 0; r < currentRowsCount; r++) {
+          const rowObj = item.rows[r] || { bg: 'white' };
+          const divY = badgeY + (r * rowHeight);
+
+          if (rowObj.bg === 'black') {
+            doc.setFillColor(0, 0, 0);
+            if (currentRowsCount === 1) {
+              doc.roundedRect(badgeX, badgeY, badgeW, badgeH, radius, radius, 'F');
+            } else if (r === 0) {
+              doc.roundedRect(badgeX, badgeY, badgeW, rowHeight + radius, radius, radius, 'F');
+              doc.setFillColor(255, 255, 255);
+              doc.rect(badgeX, badgeY + rowHeight, badgeW, radius, 'F');
+            } else if (r === currentRowsCount - 1) {
+              doc.roundedRect(badgeX, divY - radius, badgeW, rowHeight + radius, radius, radius, 'F');
+              doc.setFillColor(255, 255, 255);
+              doc.rect(badgeX, divY - radius, badgeW, radius, 'F');
+              doc.setFillColor(0, 0, 0);
+              doc.roundedRect(badgeX, divY, badgeW, rowHeight, radius, radius, 'F');
+            } else {
+              doc.rect(badgeX, divY, badgeW, rowHeight, 'F');
+            }
+          }
+        }
+
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(1.1);
+        doc.roundedRect(badgeX, badgeY, badgeW, badgeH, radius, radius, 'S');
+
+        for (let r = 1; r < currentRowsCount; r++) {
+          const divY = badgeY + (r * rowHeight);
+          doc.setDrawColor(0, 0, 0);
+          doc.setLineWidth(0.8);
+          doc.line(badgeX, divY, badgeX + badgeW, divY);
+        }
+
+        for (let r = 0; r < currentRowsCount; r++) {
+          const rowObj = item.rows[r] || { text: '', bg: 'white' };
+          const textStr = (rowObj.text || '').toUpperCase();
+          const isBlack = (rowObj.bg === 'black');
+
+          if (isBlack) {
+            doc.setTextColor(255, 255, 255);
+            doc.setFont("courier", "bold");
+          } else {
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "bold");
+          }
+
+          let maxPt = currentRowsCount === 1 ? 22 : (currentRowsCount === 2 ? 15 : 10.5);
+          doc.setFontSize(maxPt);
+          while (doc.getTextWidth(textStr) > (badgeW - 4) && maxPt > 5) {
+            maxPt -= 0.4;
+            doc.setFontSize(maxPt);
+          }
+
+          const centerY = badgeY + (r * rowHeight) + (rowHeight / 2) + (maxPt * 0.3527 / 3);
+          doc.text(textStr, badgeX + (badgeW / 2), centerY, { align: "center" });
+        }
+      });
+
+      doc.save(`etiquetas_56x21_${Date.now()}.pdf`);
+    }
+
+    function directPrint() {
+      const isRotated = document.getElementById('printOrientation').value === 'rotado';
+      const iframe = document.getElementById('print-frame-hidden');
+      const doc = iframe.contentWindow.document;
+
+      let labelsHtml = '';
+      labelsData.forEach((item, index) => {
+        let rowsHtml = '';
+        for (let r = 0; r < currentRowsCount; r++) {
+          const rowObj = item.rows[r] || { text: '', bg: 'white' };
+          const textVal = (rowObj.text || '').toUpperCase();
+          const prevEl = document.getElementById(`text-${index}-${r}`);
+          const fontSize = prevEl ? prevEl.style.fontSize : '12pt';
+          const isBlack = rowObj.bg === 'black';
+
+          rowsHtml += `
+            <div style="flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; 
+                        white-space:nowrap; padding:0 1.5mm; text-transform:uppercase; line-height:1; 
+                        background:${isBlack ? '#000000' : '#ffffff'} !important; 
+                        color:${isBlack ? '#ffffff' : '#000000'} !important; 
+                        font-family:${isBlack ? "'Courier New', monospace" : "-apple-system, Arial, sans-serif"}; 
+                        font-weight:800; font-size:${fontSize}; 
+                        border-bottom:${r < currentRowsCount - 1 ? '1.1mm solid #000000' : 'none'}; 
+                        -webkit-print-color-adjust:exact !important; print-color-adjust:exact !important;">
+              ${escapeHtml(textVal)}
+            </div>
+          `;
+        }
+
+        const transformCss = isRotated ? 'transform: rotate(90deg); transform-origin: center center;' : '';
+
+        labelsHtml += `
+          <div class="print-page">
+            <div style="width:56mm; height:20mm; display:flex; align-items:center; justify-content:center; ${transformCss}">
+              <div style="width:53mm; height:18.6mm; border:1.3mm solid #000000; border-radius:3.2mm; overflow:hidden; display:flex; flex-direction:column; background:#ffffff;">
+                ${rowsHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      const pageSize = isRotated ? '20.2mm 56mm portrait' : '56mm 20.2mm landscape';
+      const pageW = isRotated ? '20.2mm' : '56mm';
+      const pageH = isRotated ? '56mm' : '20.2mm';
+
+      const iframeContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            @page {
+              size: ${pageSize};
+              margin: 0mm !important;
+            }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #fff !important;
+              overflow: hidden !important;
+            }
+            .print-page {
+              width: ${pageW} !important;
+              height: ${pageH} !important;
+              max-height: ${pageH} !important;
+              overflow: hidden !important;
+              page-break-after: always !important;
+              break-after: page !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+            .print-page:last-child {
+              page-break-after: avoid !important;
+              break-after: avoid !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${labelsHtml}
+        </body>
+        </html>
+      `;
+
+      doc.open();
+      doc.write(iframeContent);
+      doc.close();
+
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      }, 250);
+    }
+
+    renderInputs();
+    renderPreview();
+  </script>
+</body>
+</html>
